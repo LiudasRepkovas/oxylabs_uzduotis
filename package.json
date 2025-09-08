@@ -1,0 +1,20 @@
+{
+  "name": "oxylabs-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc-watch --onSuccess \"node ./dist/index.js\""
+  },
+  "dependencies": {
+    "shortid": "^2.2.17"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "@types/shortid": "^2.2.0",
+    "typescript": "^5.5.3",
+    "tsc-watch": "^7.1.1"
+  },
+  "private": true
+}
