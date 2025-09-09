@@ -1,10 +1,6 @@
 import net from "net";
-import {TRAFFIC_LIMIT} from "../config";
 
 export class ProxyClient {
-
-    readonly trafficLimit = TRAFFIC_LIMIT;
-
     private sent = 0;
     private received = 0;
 
@@ -12,15 +8,16 @@ export class ProxyClient {
         private id: string,
         private socket: net.Socket,
         private onData: (clientId: string, data: Buffer) => void,
-        private onDisconnect: (clientId: string) => void
+        private onDisconnect: (clientId: string) => void,
+        private readonly trafficLimit: number
     ) {
         socket.setEncoding('utf8');
         socket.on('error', this.handleError.bind(this));
         socket.on('data', this.handleData.bind(this));
-        this.systemSend(Buffer.from('\nHello from server, your id is: ' + this.id + '\n'));
+        this.freeWrite(Buffer.from('\nHello from server, your id is: ' + this.id + '\n'));
     }
 
-    send(data: Buffer) {
+    write(data: Buffer) {
         this.socket.write(data, (e?) => {
             this.writeCallback(data.length, e)
             this.disconnectIfDataLimitReached();
@@ -35,7 +32,7 @@ export class ProxyClient {
         return this.sent + this.received;
     }
 
-    private systemSend(data: Buffer) {
+    private freeWrite(data: Buffer) {
         this.socket.write(data, (e?) => {
             this.writeCallback(0, e)
         });
@@ -59,10 +56,9 @@ export class ProxyClient {
     }
 
     private disconnectIfDataLimitReached() {
-
         console.log(`[CLIENT][${this.id}] Total traffic: ${this.getTotalTraffic()}`)
         if (this.getTotalTraffic() >= this.trafficLimit) {
-            this.systemSend(Buffer.from('\nData limit reached, disconnecting\n'));
+            this.freeWrite(Buffer.from('\nData limit reached, disconnecting\n'));
             this.disconnect();
             this.onDisconnect(this.id)
         }

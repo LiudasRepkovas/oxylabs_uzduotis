@@ -15,7 +15,7 @@ This project implements a minimal TCP proxy/broadcast server in Node.js with Typ
 
 ## Installation
 1. Clone or download this repository to your machine.
-2. Open a terminal in the project root (A:\Desktop\oxylabs-test or your cloned folder).
+2. Open a terminal in the project root.
 3. Install dependencies:
 ```
 npm install
@@ -65,4 +65,4 @@ Each client will receive a welcome message that includes its generated ID. When 
 ## Configuration Notes
 - Port: Defined as PORT in src/config.ts (default 9000). Change it there and rebuild.
 - Traffic limit: Defined as TRAFFIC_LIMIT in src/config.ts (default 100). The ProxyClient reads this value at runtime.
-- Encoding: The client socket uses `utf8` and counts characters; in real‑world scenarios you may want to measure bytes directly for accurate accounting.
+- Encoding and accounting: Incoming data is decoded as UTF‑8 because the server calls socket.setEncoding('utf8'), so inbound traffic is counted by JavaScript string length (characters).
