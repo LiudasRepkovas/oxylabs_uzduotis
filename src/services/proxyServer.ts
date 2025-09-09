@@ -10,11 +10,11 @@ export class ProxyServer {
     constructor() {
         this.tcpServer = net.createServer((socket) => this.createSocket(socket));
         this.tcpServer.on('error', this.handleError);
-        this.tcpServer.on('close', () => console.log('[SERVER] Connection closed'));
+        this.tcpServer.on('close', () => console.log('[SERVER] Connection closed', this.sockets));
     }
 
     async listen(port: number): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.tcpServer.listen(port);
             this.tcpServer.on('listening', () => {
                 console.log('[SERVER] Listening on port: ' + port)
@@ -54,5 +54,6 @@ export class ProxyServer {
 
     private onClientDisconnect(clientId: string) {
         this.sockets.delete(clientId);
+        console.log('ids still connected:', [...this.sockets].map(([id]) => id));
     }
 }

@@ -40,9 +40,8 @@ export class ProxySocket {
     }
 
     disconnect(): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.socket.end(() => {
-                this.onDisconnect(this.id);
                 resolve();
             });
         })
@@ -67,7 +66,6 @@ export class ProxySocket {
             this.handleError(e);
             throw e;
         }
-
     }
 
     private async receive(data: Buffer) {
@@ -86,8 +84,8 @@ export class ProxySocket {
 
     private async disconnectIfDataLimitReached(): Promise<void> {
         if (this.getTotalTraffic() >= this.trafficLimit) {
-            await this.disconnect();
             await this.freeSend(Buffer.from('\nData limit reached, disconnecting\n'));
+            await this.disconnect();
         }
     }
 }
