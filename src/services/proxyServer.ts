@@ -23,9 +23,24 @@ export class ProxyServer {
         })
     }
 
-    private createSocket(socket: net.Socket) {
+    async shutdown(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.tcpServer.close((e) => {
+                if(e) {
+                    reject(e)
+                } else {
+                    console.log('[SERVER] Connection closed');
+                    resolve();
+                }
+            })
+        })
+    }
+
+    private async createSocket(socket: net.Socket) {
         const id = shortid();
-        this.sockets.set(id, new ProxySocket(id, socket, this.onClientReceive.bind(this), this.onClientDisconnect.bind(this), TRAFFIC_LIMIT));
+        const proxySocket = new ProxySocket(id, socket, this.onClientReceive.bind(this), this.onClientDisconnect.bind(this), TRAFFIC_LIMIT)
+        this.sockets.set(id, proxySocket);
+        await proxySocket.start();
     }
 
     private handleError(err: Error) {

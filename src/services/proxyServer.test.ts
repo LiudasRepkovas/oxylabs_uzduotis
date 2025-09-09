@@ -42,7 +42,7 @@ describe("ProxyServer", () => {
 
     socket1.emit('data', 'hello');
 
-    expect(socket2.writes.map((b: Buffer) => b.toString())).toEqual(
+    expect(socket2.writes.map((b) => b.toString())).toEqual(
         expect.arrayContaining([
           expect.stringContaining('hello')
         ])
@@ -62,12 +62,12 @@ describe("ProxyServer", () => {
     socket2.emit('data', 'hello2');
 
 
-    expect(socket1.writes.map((b: Buffer) => b.toString())).toEqual(
+    expect(socket1.writes.map((b) => b.toString())).toEqual(
         expect.arrayContaining([
           expect.stringContaining('hello2')
         ])
     );
-    expect(socket2.writes.map((b: Buffer) => b.toString())).toEqual(
+    expect(socket2.writes.map((b) => b.toString())).toEqual(
         expect.arrayContaining([
           expect.stringContaining('hello1')
         ])
@@ -88,5 +88,20 @@ describe("ProxyServer", () => {
   test("logs when listening", async () => {
     await server.listen(1234);
     expect(console.log).toHaveBeenCalledWith('[SERVER] Listening on port: 1234');
+    await server.shutdown();
+  })
+
+  test("logs when shutting down", async () => {
+    await server.listen(1234);
+    await server.shutdown();
+    expect(console.log).toHaveBeenCalledWith('[SERVER] Connection closed');
+  })
+
+  test("handles shutdown errors", async () => {
+
+    const tcpServer = (server as any).tcpServer;
+    tcpServer.close = jest.fn().mockImplementation((cb) => cb(new Error('test error')));
+
+    await expect(server.shutdown()).rejects.toThrow('test error');
   })
 });

@@ -1,23 +1,27 @@
 import {EventEmitter} from "events";
 
 export class MockSocket extends EventEmitter {
-  public writes: Buffer[] = [];
+  public writes: (Buffer | Error)[] = [];
   public ended = false;
   public encoding?: string;
+
+  constructor(private forceError: boolean = false) {
+    super();
+  }
 
   setEncoding(enc: string) {
     this.encoding = enc;
   }
 
-  write(data: Buffer | string, cb?: (err?: Error | null) => void) {
-    const buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
-    this.writes.push(buf);
-    if (cb) cb(null);
+  write(data: Buffer , cb?: (err?: Error | null) => void) {
+    this.writes.push(data);
+    if (cb) cb(this.forceError ? new Error("Forced error") : null);
     return true;
   }
 
-  end() {
+  end(cb?: () => void) {
     this.ended = true;
+    if (cb) cb();
     this.emit("end");
   }
 }

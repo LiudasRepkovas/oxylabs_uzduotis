@@ -14,52 +14,80 @@ export class ProxySocket {
         socket.on('error', this.handleError.bind(this));
         socket.on('data', this.receive.bind(this));
         socket.on('end', () => this.onDisconnect(this.id));
-        this.freeSend(Buffer.from('\nHello from server, your id is: ' + this.id + '\n'));
     }
 
-    async send(data: Buffer) {
-        this.socket.write(data, (e?) => {
-            this.sendCallback(data.length, e)
-            this.disconnectIfDataLimitReached();
-        });
+    start(): Promise<void> {
+        return this.freeSend(Buffer.from(`Hello from server, your id is: ${this.id}\n`));
     }
 
-    disconnect() {
-        this.socket.end();
-        this.onDisconnect(this.id)
+    async send(data: Buffer): Promise<void> {
+        try {
+            await new Promise<void>((resolve, reject) => {
+                this.socket.write(data, async (e?) => {
+                    if (e) {
+                        reject(e);
+                        return;
+                    }
+                    this.inboundBytes += data.length;
+                    await this.disconnectIfDataLimitReached();
+                    resolve();
+                });
+            })
+        } catch (e: Error | any) {
+            this.handleError(e);
+            throw e;
+        }
+    }
+
+    disconnect(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.socket.end(() => {
+                this.onDisconnect(this.id);
+                resolve();
+            });
+        })
     }
 
     getTotalTraffic() {
         return this.outboundBytes + this.inboundBytes;
     }
 
-    private freeSend(data: Buffer) {
-        this.socket.write(data, (e?) => {
-            this.sendCallback(0, e)
-        });
-    }
-
-    private sendCallback(bytes: number, e?: Error | null) {
-        if (e) {
+    private async freeSend(data: Buffer): Promise<void> {
+        try {
+            await new Promise<void>((resolve, reject) => {
+                this.socket.write(data, async (e?) => {
+                    if (e) {
+                        reject(e);
+                        return;
+                    }
+                    resolve();
+                });
+            })
+        } catch (e: Error | any) {
             this.handleError(e);
+            throw e;
         }
-        this.inboundBytes += bytes;
+
     }
 
-    private receive(data: Buffer) {
-        this.onReceive(this.id, data);
-        this.outboundBytes += data.length;
-        this.disconnectIfDataLimitReached();
+    private async receive(data: Buffer) {
+        try {
+            this.onReceive(this.id, data);
+            this.outboundBytes += data.length;
+            await this.disconnectIfDataLimitReached();
+        } catch (e: Error | any) {
+           this.handleError(e);
+        }
     }
 
     private handleError(err: Error) {
         console.error(`[CLIENT][ERROR][${this.id}]`, err);
     }
 
-    private disconnectIfDataLimitReached() {
+    private async disconnectIfDataLimitReached(): Promise<void> {
         if (this.getTotalTraffic() >= this.trafficLimit) {
-            this.freeSend(Buffer.from('\nData limit reached, disconnecting\n'));
-            this.disconnect();
+            await this.disconnect();
+            await this.freeSend(Buffer.from('\nData limit reached, disconnecting\n'));
         }
     }
 }
