@@ -1,38 +1,43 @@
 import net from "net";
 import shortid from "shortid";
-import {ProxyClient} from "./proxyClient";
+import {ProxySocket} from "./proxySocket";
 import {TRAFFIC_LIMIT} from "../config";
 
 export class ProxyServer {
-    private clients: Map<string, ProxyClient> = new Map();
+    private sockets: Map<string, ProxySocket> = new Map();
     private tcpServer: net.Server
 
     constructor() {
-        this.tcpServer = net.createServer((socket) => this.createClient(socket));
+        this.tcpServer = net.createServer((socket) => this.createSocket(socket));
         this.tcpServer.on('error', this.handleError);
         this.tcpServer.on('close', () => console.log('[SERVER] Connection closed'));
     }
 
-    listen(port: number) {
-        this.tcpServer.on('listening', ()=> console.log('[SERVER] Listening on port: ' + port ));
-        this.tcpServer.listen(port);
+    async listen(port: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.tcpServer.listen(port);
+            this.tcpServer.on('listening', () => {
+                console.log('[SERVER] Listening on port: ' + port)
+                resolve();
+            });
+        })
     }
 
-    private createClient(socket: net.Socket) {
+    private createSocket(socket: net.Socket) {
         const id = shortid();
-        this.clients.set(id, new ProxyClient(id, socket, this.onClientData.bind(this), this.onClientDisconnect.bind(this), TRAFFIC_LIMIT));
+        this.sockets.set(id, new ProxySocket(id, socket, this.onClientReceive.bind(this), this.onClientDisconnect.bind(this), TRAFFIC_LIMIT));
     }
 
     private handleError(err: Error) {
         console.error('[ERROR][SERVER]', err);
     }
 
-    private onClientData(clientId: string, data: Buffer) {
-        const clients = [...this.clients].filter(([id]) => id !== clientId);
-        clients.forEach(([, c]) => c.write(data));
+    private onClientReceive(clientId: string, data: Buffer) {
+        const clients = [...this.sockets].filter(([id]) => id !== clientId);
+        clients.forEach(([, c]) => c.send(data));
     }
 
     private onClientDisconnect(clientId: string) {
-        this.clients.delete(clientId);
+        this.sockets.delete(clientId);
     }
 }

@@ -15,14 +15,14 @@ describe("ProxyServer", () => {
   });
 
   test("creates a ProxyClient when a new socket connects", () => {
-    const createClientSpy = jest.spyOn<any, any>(server as any, 'createClient');
+    const createSocketSpy = jest.spyOn<any, any>(server as any, 'createSocket');
     const tcpServer = (server as any).tcpServer;
 
     const socket = new MockSocket()
     tcpServer.emit('connection', socket)
 
-    expect(createClientSpy).toHaveBeenCalledTimes(1);
-    expect(createClientSpy).toHaveBeenCalledWith(socket);
+    expect(createSocketSpy).toHaveBeenCalledTimes(1);
+    expect(createSocketSpy).toHaveBeenCalledWith(socket);
   });
 
   test("logs error when socket connection fails", () => {
@@ -49,7 +49,7 @@ describe("ProxyServer", () => {
     );
   });
 
-  test("don't broadcast data to itself", () => {
+  test("doesn't broadcast data to itself", () => {
     const tcpServer = (server as any).tcpServer;
 
     const socket1 = new MockSocket();
@@ -82,6 +82,11 @@ describe("ProxyServer", () => {
     tcpServer.emit('connection', socket2)
     socket1.emit('data', 'hello');
     socket1.emit('end');
-    expect((server as any).clients.size).toEqual(2);
+    expect((server as any).sockets.size).toEqual(1);
+  })
+
+  test("logs when listening", async () => {
+    await server.listen(1234);
+    expect(console.log).toHaveBeenCalledWith('[SERVER] Listening on port: 1234');
   })
 });
