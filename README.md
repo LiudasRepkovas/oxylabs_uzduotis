@@ -10,7 +10,7 @@ This project implements a minimal TCP proxy/broadcast server in Node.js with Typ
 - Written in TypeScript with a simple dev workflow
 
 ## Prerequisites
-- Node.js 18+ (recommended) and npm
+- Node.js 20+ (recommended) and npm
 - Windows, macOS, or Linux
 
 ## Installation
