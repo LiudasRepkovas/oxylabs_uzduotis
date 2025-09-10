@@ -54,6 +54,6 @@ export class ProxyServer {
 
     private onClientDisconnect(clientId: string) {
         this.sockets.delete(clientId);
-        console.log('ids still connected:', [...this.sockets].map(([id]) => id));
+        console.debug('ids still connected:', [...this.sockets].map(([id]) => id));
     }
 }

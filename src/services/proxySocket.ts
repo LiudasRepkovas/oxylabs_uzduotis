@@ -17,6 +17,7 @@ export class ProxySocket {
     }
 
     start(): Promise<void> {
+        console.debug('[CLIENT] Connected: ' + this.id + '')
         return this.freeSend(Buffer.from(`Hello from server, your id is: ${this.id}\n`));
     }
 

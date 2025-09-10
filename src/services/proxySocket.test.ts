@@ -122,6 +122,5 @@ describe("ProxySocket", () => {
     socket.emit("data", 'normal data');
     expect(console.error).toHaveBeenCalledWith('[CLIENT][ERROR][abc123]', new Error("test error"));
   })
-
 });
 
