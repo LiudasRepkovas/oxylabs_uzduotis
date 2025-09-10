@@ -64,5 +64,4 @@ Each client will receive a welcome message that includes its generated ID. When 
 
 ## Configuration Notes
 - Port: Defined as PORT in src/config.ts (default 9000). Change it there and rebuild.
-- Traffic limit: Defined as TRAFFIC_LIMIT in src/config.ts (default 100). The ProxyClient reads this value at runtime.
-- Encoding and accounting: Incoming data is decoded as UTF‑8 because the server calls socket.setEncoding('utf8'), so inbound traffic is counted by JavaScript string length (characters).
+- Traffic limit: Defined as TRAFFIC_LIMIT in src/config.ts (default 100). The ProxyClient reads this value at runtime. Number represents bytes.
